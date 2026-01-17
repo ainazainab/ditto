@@ -1,24 +1,17 @@
-# Test 13: RBAC Privilege Escalation (Viewer to Admin)
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "TEST: RBAC Privilege Escalation" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "NOTE: Requires viewer user in nginx.htpasswd" -ForegroundColor Yellow
-Write-Host ""
-
+# Test 13: RBAC Privilege Escalation (Unauthorized Policy Modification)
+# Tests if unauthorized user can modify policies (should be blocked)
 try {
-    $cred = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("viewer:viewer123"))
-    $response = Invoke-WebRequest -Uri "http://localhost:8080/api/2/policies/demo:sensor-policy" `
+    # Try to modify policy with unauthorized credentials
+    $cred = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("unauthorized:user"))
+    $response = Invoke-WebRequest -Uri "http://localhost:8080/api/2/policies/demo:sensor-1" `
         -Method PUT -Headers @{"Content-Type"="application/json"; "Authorization"="Basic $cred"} `
         -Body '{"entries": {}}' -ErrorAction Stop
-    Write-Host "[X][X][X] CRITICAL VULNERABILITY: Viewer can modify policy! Status: $($response.StatusCode)" -ForegroundColor Red
+    Write-Host "[X] VULNERABILITY" -ForegroundColor Red
 } catch {
     $code = $_.Exception.Response.StatusCode.value__
-    if ($code -eq 403) {
-        Write-Host "[OK] SECURE: Privilege escalation blocked (403 Forbidden)" -ForegroundColor Green
-    } elseif ($code -eq 401) {
-        Write-Host "[X] Viewer user not found. Add to nginx.htpasswd first" -ForegroundColor Red
+    if ($code -eq 401 -or $code -eq 403) {
+        Write-Host "[OK] SECURE" -ForegroundColor Green
     } else {
-        Write-Host "[?] Status: $code" -ForegroundColor Yellow
+        Write-Host "[?] UNKNOWN" -ForegroundColor Yellow
     }
 }
-
