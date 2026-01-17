@@ -1,0 +1,91 @@
+﻿{
+    "summary":  {
+                    "vulnerabilities":  0,
+                    "failed":  8,
+                    "total":  8,
+                    "passed":  0
+                },
+    "timestamp":  "2025-11-18_16-20-12",
+    "tests":  [
+                  {
+                      "timestamp":  "2025-11-18T16:20:12.6816356+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "01_unauthorized_write_no_auth.ps1",
+                      "name":  "Unauthorized Write (No Auth)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  1,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2025-11-18T16:20:12.8265945+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "02_unauthorized_write_wrong_creds.ps1",
+                      "name":  "Unauthorized Write (Wrong Creds)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  2,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2025-11-18T16:20:12.8541444+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "03_input_validation_extreme_values.ps1",
+                      "name":  "Input Validation (Extreme Values)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  3,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2025-11-18T16:20:13.0769906+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "04_input_validation_negative_values.ps1",
+                      "name":  "Input Validation (Negative Values)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  4,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2025-11-18T16:20:13.1675884+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "05_input_validation_wrong_type.ps1",
+                      "name":  "Input Validation (Wrong Type)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  5,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2025-11-18T16:20:13.2925461+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "06_input_validation_malformed_json.ps1",
+                      "name":  "Input Validation (Malformed JSON)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  6,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2025-11-18T16:20:13.4180576+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "07_rate_limiting_dos.ps1",
+                      "name":  "Rate Limiting (DoS)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  7,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2025-11-18T16:20:13.5457342+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "08_replay_attack.ps1",
+                      "name":  "Replay Attack",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  8,
+                      "output":  ""
+                  }
+              ]
+}

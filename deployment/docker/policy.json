@@ -1,0 +1,44 @@
+{
+  "policyId": "demo:sensor-policy",
+  "entries": {
+    "viewer": {
+      "subjects": {
+        "demo:viewer": {
+          "type": "user"
+        }
+      },
+      "resources": {
+        "thing:/": {
+          "grant": ["READ"],
+          "revoke": []
+        }
+      }
+    },
+    "operator": {
+      "subjects": {
+        "demo:operator": {
+          "type": "user"
+        }
+      },
+      "resources": {
+        "thing:/": {
+          "grant": ["READ", "WRITE"],
+          "revoke": []
+        }
+      }
+    },
+    "admin": {
+      "subjects": {
+        "demo:admin": {
+          "type": "user"
+        }
+      },
+      "resources": {
+        "thing:/": {
+          "grant": ["READ", "WRITE", "ADMINISTRATE"],
+          "revoke": []
+        }
+      }
+    }
+  }
+}

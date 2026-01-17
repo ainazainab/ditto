@@ -1,0 +1,26 @@
+﻿{
+    "timestamp":  "2026-01-06_13-18-58",
+    "fixes":  [
+                  {
+                      "status":  "applied",
+                      "timestamp":  "2026-01-06T13:18:58.4901717+01:00",
+                      "name":  "RBAC Policies"
+                  },
+                  {
+                      "status":  "applied",
+                      "timestamp":  "2026-01-06T13:18:58.5700068+01:00",
+                      "name":  "Input Validation"
+                  },
+                  {
+                      "status":  "applied",
+                      "timestamp":  "2026-01-06T13:18:58.6389310+01:00",
+                      "name":  "Rate Limiting"
+                  },
+                  {
+                      "status":  "manual",
+                      "timestamp":  "2026-01-06T13:18:58.6409718+01:00",
+                      "name":  "Network Security",
+                      "note":  "Requires docker-compose.yml modification"
+                  }
+              ]
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Policy and Thing - Automated</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .step { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Create Policy and Thing - Automated</h1>
+    <p>This page will create the policy and thing needed for live updates.</p>
+    
+    <div class="step" id="step1">
+        <h2>Step 1: Create Policy</h2>
+        <button onclick="createPolicy()">Create Policy (demo:sensor-policy)</button>
+        <div id="policyResult"></div>
+    </div>
+    
+    <div class="step" id="step2">
+        <h2>Step 2: Create Thing</h2>
+        <button onclick="createThing()">Create Thing (demo:sensor-1)</button>
+        <div id="thingResult"></div>
+    </div>
+    
+    <div class="step" id="step3">
+        <h2>Step 3: Verify</h2>
+        <button onclick="verify()">Verify Everything</button>
+        <div id="verifyResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api/2';
+        const DEVOPS_AUTH = btoa('devops:foobar');
+        const REGULAR_AUTH = btoa('ditto:ditto');
+        
+        const policyJson = {
+            "entries": {
+                "ditto": {
+                    "subjects": {
+                        "nginx:ditto": {
+                            "type": "user"
+                        }
+                    },
+                    "resources": {
+                        "thing:/": {
+                            "grant": ["READ", "WRITE", "ADMINISTRATE"],
+                            "revoke": []
+                        },
+                        "policy:/": {
+                            "grant": ["READ", "WRITE", "ADMINISTRATE"],
+                            "revoke": []
+                        }
+                    }
+                }
+            }
+        };
+        
+        const thingJson = {
+            "definition": "demo:sensor:1.0.0",
+            "attributes": {
+                "name": "Temperature Sensor"
+            },
+            "features": {
+                "temp": {
+                    "properties": {
+                        "value": 25.0,
+                        "unit": "celsius",
+                        "timestamp": "2024-01-01T00:00:00Z",
+                        "status": "active"
+                    }
+                }
+            }
+        };
+        
+        async function createPolicy() {
+            const resultDiv = document.getElementById('policyResult');
+            resultDiv.innerHTML = '<p>Creating policy...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/policies/demo:sensor-policy`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Basic ${DEVOPS_AUTH}`
+                    },
+                    body: JSON.stringify(policyJson)
+                });
+                
+                if (response.ok || response.status === 409) {
+                    resultDiv.innerHTML = '<p class="success">✓ Policy created successfully!</p>';
+                    document.getElementById('step1').classList.add('success');
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<p class="error">✗ Failed: ${response.status}<br><pre>${error}</pre></p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function createThing() {
+            const resultDiv = document.getElementById('thingResult');
+            resultDiv.innerHTML = '<p>Creating thing...</p>';
+            
+            // Wait a moment for policy to propagate
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            try {
+                const response = await fetch(`${API_BASE}/things/demo:sensor-1?policyId=demo:sensor-policy`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Basic ${REGULAR_AUTH}`
+                    },
+                    body: JSON.stringify(thingJson)
+                });
+                
+                if (response.ok || response.status === 409) {
+                    resultDiv.innerHTML = '<p class="success">✓ Thing created successfully!</p>';
+                    document.getElementById('step2').classList.add('success');
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<p class="error">✗ Failed: ${response.status}<br><pre>${error}</pre></p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function verify() {
+            const resultDiv = document.getElementById('verifyResult');
+            resultDiv.innerHTML = '<p>Verifying...</p>';
+            
+            try {
+                const thingResponse = await fetch(`${API_BASE}/things/demo:sensor-1`, {
+                    headers: {
+                        'Authorization': `Basic ${REGULAR_AUTH}`
+                    }
+                });
+                
+                if (thingResponse.ok) {
+                    const thing = await thingResponse.json();
+                    resultDiv.innerHTML = `
+                        <p class="success">
+                            ✓ Thing exists!<br>
+                            Policy: ${thing.policyId}<br>
+                            Temperature: ${thing.features?.temp?.properties?.value || 'N/A'}°C
+                        </p>
+                        <p><strong>✅ Live updates should now work!</strong><br>
+                        Open dashboard: <a href="http://localhost:5000" target="_blank">http://localhost:5000</a></p>
+                    `;
+                    document.getElementById('step3').classList.add('success');
+                } else {
+                    resultDiv.innerHTML = `<p class="error">✗ Thing not found: ${thingResponse.status}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,201 @@
+﻿{
+    "summary":  {
+                    "vulnerabilities":  0,
+                    "failed":  19,
+                    "total":  18,
+                    "passed":  0
+                },
+    "timestamp":  "2026-01-06_13-22-38",
+    "tests":  [
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.4748966+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "01_unauthorized_write_no_auth.ps1",
+                      "name":  "Unauthorized Write (No Auth)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  1,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.5128907+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "02_unauthorized_write_wrong_creds.ps1",
+                      "name":  "Unauthorized Write (Wrong Creds)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  2,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.5570884+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "03_input_validation_extreme_values.ps1",
+                      "name":  "Input Validation (Extreme Values)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  3,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.6497901+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "04_input_validation_negative_values.ps1",
+                      "name":  "Input Validation (Negative Values)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  4,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.6868363+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "05_input_validation_wrong_type.ps1",
+                      "name":  "Input Validation (Wrong Type)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  5,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.7274624+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "06_input_validation_malformed_json.ps1",
+                      "name":  "Input Validation (Malformed JSON)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  6,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.7522008+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "07_rate_limiting_dos.ps1",
+                      "name":  "Rate Limiting (DoS)",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  7,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.7810119+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "08_replay_attack.ps1",
+                      "name":  "Replay Attack",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  8,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.8169113+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "09_rbac_viewer_read.ps1",
+                      "name":  "RBAC Viewer Read Only",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  9,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.8770881+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "10_rbac_viewer_write_attempt.ps1",
+                      "name":  "RBAC Viewer Write Attempt",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  10,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.9143263+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "11_rbac_operator_write_telemetry.ps1",
+                      "name":  "RBAC Operator Write Telemetry",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  11,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:38.9709626+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "12_rbac_operator_modify_thing.ps1",
+                      "name":  "RBAC Operator Modify Thing",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  12,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:39.0169880+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "13_rbac_privilege_escalation.ps1",
+                      "name":  "RBAC Privilege Escalation",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  13,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:39.0870724+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "14_websocket_auth.ps1",
+                      "name":  "WebSocket Authentication",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  14,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:39.1721350+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "15_websocket_message_injection.ps1",
+                      "name":  "WebSocket Message Injection",
+                      "status":  "error",
+                      "severity":  "unknown",
+                      "number":  15,
+                      "output":  "At C:\\Users\\lenovo\\ditto\\ditto\\deployment\\docker\\tests\\15_websocket_message_injection.ps1:14 char:60\r\n+ Write-Host \"   - Script: ws.send(\u0027{\"msg\": \"\u003cscript\u003ealert(1)\u003c/script\u003e\" ...\r\n+                                                            ~\nThe \u0027\u003c\u0027 operator is reserved for future use."
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:39.2078906+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "16_container_network_isolation.ps1",
+                      "name":  "Container Network Isolation",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  16,
+                      "output":  "OCI runtime exec failed: exec failed: unable to start container process: exec: \"curl\": executable file not found in $PATH: unknown\r\ndocker : sh: 1: nc: not found\r\nAt C:\\Users\\lenovo\\ditto\\ditto\\deployment\\docker\\tests\\16_container_network_iso\r\nlation.ps1:21 char:5\r\n+     docker exec $containerName sh -c \"echo \u0027test\u0027 | nc mongodb 27017\" ...\r\n+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (sh: 1: nc: not found:String) [],  \r\n   RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\nOCI runtime exec failed: exec failed: unable to start container process: exec: \"curl\": executable file not found in $PATH: unknown\r\n"
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:39.9767254+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "17_port_exposure_scan.ps1",
+                      "name":  "Port Exposure Scan",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  17,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:46.2716792+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "18_digital_twin_state_manipulation.ps1",
+                      "name":  "Digital Twin State Manipulation",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  18,
+                      "output":  ""
+                  },
+                  {
+                      "timestamp":  "2026-01-06T13:22:47.8496271+01:00",
+                      "vulnerability_found":  false,
+                      "file":  "19_policy_bypass_attack.ps1",
+                      "name":  "Policy Bypass Attack",
+                      "status":  "unknown",
+                      "severity":  "unknown",
+                      "number":  19,
+                      "output":  ""
+                  }
+              ]
+}

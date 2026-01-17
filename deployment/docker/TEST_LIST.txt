@@ -1,0 +1,20 @@
+1. Unauthorized Write Access (no authentication)
+2. Unauthorized Write Access (wrong credentials)
+3. Input Validation (extreme values)
+4. Input Validation (negative values)
+5. Input Validation (wrong data type)
+6. Input Validation (malformed JSON)
+7. Rate Limiting (DoS attack simulation)
+8. Replay Attack (resend old messages)
+9. RBAC Viewer Read Only
+10. RBAC Viewer Write Attempt (should fail)
+11. RBAC Operator Write Telemetry
+12. RBAC Operator Modify Thing (should fail)
+13. RBAC Privilege Escalation (viewer to admin)
+14. WebSocket Authentication (no credentials)
+15. WebSocket Message Injection
+16. Container Network Isolation
+17. Port Exposure Scan
+18. Digital Twin State Manipulation Attack
+19. Policy Bypass Attack
+

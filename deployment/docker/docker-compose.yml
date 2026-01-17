@@ -258,8 +258,11 @@ services:
        - ./index.html:/etc/nginx/html/index.html:ro
        - ../../documentation/src/main/resources/images:/etc/nginx/html/images:ro
        - ../../documentation/src/main/resources/wot:/etc/nginx/html/wot:ro
+       - ./ssl:/etc/nginx/ssl:ro  # SECURITY FIX: SSL certificates for HTTPS
+       - /tmp/nginx_replay_cache:/tmp/nginx_replay_cache  # SECURITY FIX: Replay attack cache
     ports:
-      - "${DITTO_EXTERNAL_PORT:-8080}:80"
+      - "${DITTO_EXTERNAL_PORT:-8080}:80"   # HTTP (redirects to HTTPS)
+      - "8443:443"  # SECURITY FIX: HTTPS port
     depends_on:
       - gateway
       - swagger-ui

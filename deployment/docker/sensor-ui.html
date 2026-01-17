@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Sensor Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border: 1px solid #475569;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #475569;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .metric-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-running {
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .status-stopped {
+            background: #ef4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .log-container {
+            background: #0f1419;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #475569;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
+        }
+
+        .log-timestamp {
+            color: #6b7280;
+        }
+
+        .log-level-info {
+            color: #10b981;
+        }
+
+        .log-level-error {
+            color: #ef4444;
+        }
+
+        .log-level-warning {
+            color: #f59e0b;
+        }
+
+        .temperature-display {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .temperature-value {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .temperature-unit {
+            font-size: 1.5rem;
+            color: #94a3b8;
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(90deg, #6b7280, #4b5563);
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(107, 114, 128, 0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #3b82f6;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐍 Python Sensor Monitor</h1>
+            <p>Real-time monitoring of your temperature sensor service</p>
+        </div>
+
+        <div class="grid">
+            <!-- Sensor Status Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🌡️</div>
+                    <div class="card-title">Sensor Status</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Service Status</span>
+                    <span class="metric-value">
+                        <span class="status-indicator status-running"></span>
+                        Running
+                    </span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Container ID</span>
+                    <span class="metric-value" id="containerId">docker-sensor-1</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Update Frequency</span>
+                    <span class="metric-value">Every 5 seconds</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Temperature Range</span>
+                    <span class="metric-value">20°C - 40°C</span>
+                </div>
+            </div>
+
+            <!-- Current Temperature Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <div class="card-title">Current Reading</div>
+                </div>
+                <div class="temperature-display">
+                    <div class="temperature-value" id="currentTemp">--</div>
+                    <div class="temperature-unit">°C</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Last Update</span>
+                    <span class="metric-value" id="lastUpdate">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Status</span>
+                    <span class="metric-value" id="sensorStatus">Active</span>
+                </div>
+            </div>
+
+            <!-- API Connection Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔗</div>
+                    <div class="card-title">API Connection</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Ditto API</span>
+                    <span class="metric-value">
+                        <span class="status-indicator status-running"></span>
+                        Connected
+                    </span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Endpoint</span>
+                    <span class="metric-value">http://nginx:80</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Authentication</span>
+                    <span class="metric-value">Basic Auth</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Thing ID</span>
+                    <span class="metric-value">demo:sensor-1</span>
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📈</div>
+                    <div class="card-title">Statistics</div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalReadings">0</div>
+                        <div class="stat-label">Total Readings</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="successRate">0%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgTemp">--</div>
+                        <div class="stat-label">Avg Temperature</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="uptime">--</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Logs -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">📝</div>
+                <div class="card-title">Live Sensor Logs</div>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">
+                    <span class="log-timestamp">[2025-10-13 14:20:00]</span>
+                    <span class="log-level-info">INFO</span>
+                    <span>🌡️ Temperature Sensor Service Started</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-timestamp">[2025-10-13 14:20:05]</span>
+                    <span class="log-level-info">INFO</span>
+                    <span>✅ Ditto is accessible</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-timestamp">[2025-10-13 14:20:05]</span>
+                    <span class="log-level-info">INFO</span>
+                    <span>🌡️ Generated temperature: 25.3°C</span>
+                </div>
+                <div class="log-entry">
+                    <span class="log-timestamp">[2025-10-13 14:20:05]</span>
+                    <span class="log-level-info">INFO</span>
+                    <span>✅ Temperature 25.3°C sent successfully</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Data</button>
+            <button class="btn btn-secondary" onclick="clearLogs()">🗑️ Clear Logs</button>
+            <button class="btn btn-secondary" onclick="exportLogs()">📥 Export Logs</button>
+        </div>
+    </div>
+
+    <script>
+        // Simulate real-time data updates
+        let totalReadings = 0;
+        let successfulReadings = 0;
+        let temperatureSum = 0;
+        let startTime = new Date();
+
+        function updateSensorData() {
+            // Simulate temperature reading
+            const temperature = (Math.random() * 20 + 20).toFixed(1);
+            const timestamp = new Date().toLocaleTimeString();
+            
+            // Update display
+            document.getElementById('currentTemp').textContent = temperature;
+            document.getElementById('lastUpdate').textContent = timestamp;
+            
+            // Update statistics
+            totalReadings++;
+            successfulReadings++;
+            temperatureSum += parseFloat(temperature);
+            
+            document.getElementById('totalReadings').textContent = totalReadings;
+            document.getElementById('successRate').textContent = '100%';
+            document.getElementById('avgTemp').textContent = (temperatureSum / totalReadings).toFixed(1) + '°C';
+            
+            // Update uptime
+            const uptime = Math.floor((new Date() - startTime) / 1000);
+            const hours = Math.floor(uptime / 3600);
+            const minutes = Math.floor((uptime % 3600) / 60);
+            const seconds = uptime % 60;
+            document.getElementById('uptime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+            
+            // Add log entry
+            addLogEntry('INFO', `🌡️ Generated temperature: ${temperature}°C`);
+            addLogEntry('INFO', `✅ Temperature ${temperature}°C sent successfully`);
+        }
+
+        function addLogEntry(level, message) {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level-${level.toLowerCase()}">${level}</span>
+                <span>${message}</span>
+            `;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Keep only last 50 entries
+            while (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        function refreshData() {
+            addLogEntry('INFO', '🔄 Refreshing sensor data...');
+            updateSensorData();
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '';
+            addLogEntry('INFO', '🗑️ Logs cleared');
+        }
+
+        function exportLogs() {
+            const logs = document.getElementById('logContainer').innerText;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sensor-logs-${new Date().toISOString().slice(0, 19)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            addLogEntry('INFO', '📥 Logs exported successfully');
+        }
+
+        // Start simulation
+        setInterval(updateSensorData, 5000);
+        
+        // Initial data load
+        updateSensorData();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,22 @@
+{
+  "policyId": "demo:sensor-policy",
+  "entries": {
+    "ditto": {
+      "subjects": {
+        "nginx:ditto": {
+          "type": "user"
+        }
+      },
+      "resources": {
+        "thing:/": {
+          "grant": ["READ", "WRITE", "ADMINISTRATE"],
+          "revoke": []
+        },
+        "policy:/": {
+          "grant": ["READ", "WRITE", "ADMINISTRATE"],
+          "revoke": []
+        }
+      }
+    }
+  }
+}

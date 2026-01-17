@@ -1,0 +1,23 @@
+{
+  "thingId": "demo:sensor-1",
+  "policyId": "demo:sensor-policy",
+  "definition": "demo:sensor:1.0.0",
+  "attributes": {
+    "name": "Temperature Sensor",
+    "description": "A digital twin of a temperature sensor for IoT research",
+    "location": "Lab Environment",
+    "manufacturer": "Research Lab",
+    "model": "TempSensor-v1.0"
+  },
+  "features": {
+    "temp": {
+      "definition": ["demo:temperature:1.0.0"],
+      "properties": {
+        "value": 25.0,
+        "unit": "celsius",
+        "timestamp": "2024-01-01T00:00:00Z",
+        "status": "active"
+      }
+    }
+  }
+}

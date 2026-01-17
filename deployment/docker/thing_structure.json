@@ -1,0 +1,18 @@
+﻿{
+    "features":  {
+                     "temp":  {
+                                  "properties":  {
+                                                     "status":  "active",
+                                                     "unit":  "celsius",
+                                                     "value":  25
+                                                 }
+                              }
+                 },
+    "attributes":  {
+                       "name":  "Temperature Sensor",
+                       "description":  "A digital twin of a temperature sensor for IoT research"
+                   },
+    "thingId":  "demo:sensor-1",
+    "policyId":  "demo:sensor-policy",
+    "definition":  "demo:sensor:1.0.0"
+}
