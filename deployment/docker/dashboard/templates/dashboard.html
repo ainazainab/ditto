@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Twin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Layout Structure */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Left Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #1e3a8a;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-logo {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+        
+        .sidebar-logo:hover {
+            opacity: 0.8;
+        }
+        
+        @media (min-width: 769px) {
+            .sidebar-logo {
+                cursor: default;
+            }
+        }
+        
+        .sidebar-nav {
+            padding: 16px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border-left-color: #60a5fa;
+        }
+        
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Top Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 240px;
+            right: 0;
+            height: 64px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 999;
+        }
+        
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .navbar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .connection-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .connection-badge.connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .connection-badge.disconnected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .last-updated {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .navbar-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .navbar-icon:hover {
+            background: #e2e8f0;
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 240px;
+            margin-top: 64px;
+            padding: 24px;
+            min-height: calc(100vh - 64px);
+        }
+        
+        /* Overview KPIs */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        @media (min-width: 1024px) {
+            .overview-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .kpi-icon.temp {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .kpi-icon.avg {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .kpi-icon.updates {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .kpi-content {
+            flex: 1;
+        }
+        
+        .kpi-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+        
+        .kpi-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        /* Cards */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        @media (min-width: 1024px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-icon {
+            width: 20px;
+            height: 20px;
+            color: #64748b;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .metric-value.large {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .status-online {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-active {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-inactive {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        
+        /* Chart Section */
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .temp-unit-toggle {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 4px;
+        }
+        
+        .temp-unit-btn {
+            padding: 6px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .temp-unit-btn:hover {
+            background: white;
+        }
+        
+        .temp-unit-btn.active {
+            background: white;
+            color: #3b82f6;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        /* Page Content */
+        .page-content {
+            display: block;
+        }
+        
+        /* Sensors List */
+        .sensors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .sensor-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .sensor-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sensor-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .sensor-id {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+        }
+        
+        .sensor-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .sensor-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .detail-label {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .detail-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        /* History Table */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .history-table thead {
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .history-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .history-table tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.2s ease;
+        }
+        
+        .history-table tbody tr:hover {
+            background: #f8fafc;
+        }
+        
+        .history-table td {
+            padding: 12px 16px;
+            font-size: 0.875rem;
+            color: #1e293b;
+        }
+        
+        .history-table td:first-child {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            color: #64748b;
+        }
+        
+        /* Raw Data Section */
+        .raw-data-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .raw-data-content {
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .raw-data-content.show {
+            display: block;
+        }
+        
+        .raw-data {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.75rem;
+            color: #475569;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        /* Settings Page */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .setting-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .setting-description {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+            background: #cbd5e1;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: #3b82f6;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .toggle-switch.active::after {
+            transform: translateX(24px);
+        }
+        
+        .select-input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #1e293b;
+            background: white;
+            cursor: pointer;
+            min-width: 120px;
+        }
+        
+        .select-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Raw Data Page */
+        .raw-data-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        /* Modal/Popup */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+        
+        .modal-message {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 24px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        /* Welcome/Login Page */
+        .welcome-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .welcome-container.show {
+            display: flex;
+        }
+        
+        .welcome-content {
+            text-align: center;
+            max-width: 400px;
+            padding: 40px;
+        }
+        
+        .welcome-logo {
+            font-size: 4rem;
+            color: #3b82f6;
+            margin-bottom: 24px;
+        }
+        
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+        
+        .welcome-description {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+        
+        .welcome-btn {
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .welcome-btn:hover {
+            background: #2563eb;
+        }
+        
+        /* Masked Data */
+        .masked-value {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            color: #64748b;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .navbar {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            border: none;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo" id="sidebarLogo">
+                    <i class="fas fa-cube"></i>
+                    <span>Digital Twin</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="sensors">
+                    <i class="fas fa-server"></i>
+                    <span>Sensors</span>
+                </a>
+                <a href="#" class="nav-item" data-page="history">
+                    <i class="fas fa-history"></i>
+                    <span>History</span>
+                </a>
+                <a href="#" class="nav-item" data-page="raw-data">
+                    <i class="fas fa-code"></i>
+                    <span>Raw Data</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="#" class="nav-item" data-page="logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Top Navbar -->
+        <nav class="navbar">
+            <div class="navbar-left">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="navbar-title">Digital Twin Dashboard</h1>
+            </div>
+            <div class="navbar-right">
+                <div class="connection-badge connected" id="connectionBadge">
+                    <span class="status-dot"></span>
+                    <span id="connectionText">Connected</span>
+                </div>
+                <div class="last-updated" id="lastUpdated">--:--:--</div>
+                <div class="navbar-icon" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="avatar" title="User">U</div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <div class="page-content" id="page-dashboard">
+            <!-- Overview KPIs -->
+            <div class="overview-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon temp">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value" id="currentTempKPI">--</div>
+                        <div class="kpi-label">Current Temperature</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon avg">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value" id="avgTempKPI">--</div>
+                        <div class="kpi-label">Average Temperature</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon updates">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <div class="kpi-value" id="totalUpdates">0</div>
+                        <div class="kpi-label">Total Updates</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Cards Grid -->
+            <div class="grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-server card-icon"></i>
+                            System Status
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric">
+                            <span class="metric-label">Ditto API</span>
+                            <span class="status-pill status-online" id="ditto-status">Online</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Sensor Service</span>
+                            <span class="status-pill status-active" id="sensor-status">Active</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Database</span>
+                            <span class="status-pill status-online" id="db-status">Online</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">API Endpoint</span>
+                            <span class="metric-value masked-value">Configured</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-thermometer-half card-icon"></i>
+                            Temperature Sensor
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric">
+                            <span class="metric-label">Current Value</span>
+                            <span class="metric-value large" id="current-temp">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Unit</span>
+                            <span class="metric-value" id="temp-unit">celsius</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Timestamp</span>
+                            <span class="metric-value" id="temp-timestamp">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Status</span>
+                            <span class="status-pill status-active" id="temp-status">Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Section -->
+                <div class="card full-width">
+                    <div class="card-header">
+                        <div class="chart-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-chart-line card-icon"></i>
+                                Temperature History
+                            </h2>
+                            <div class="temp-unit-toggle">
+                                <button class="temp-unit-btn active" data-unit="celsius">°C</button>
+                                <button class="temp-unit-btn" data-unit="fahrenheit">°F</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="temperatureChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- Sensors Page -->
+            <div class="page-content" id="page-sensors" style="display: none;">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-server card-icon"></i>
+                            Sensors
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="sensors-list" id="sensorsList">
+                            <div class="sensor-item">
+                                <div class="sensor-info">
+                                    <div class="sensor-name">Temperature Sensor</div>
+                                    <div class="sensor-id">demo:sensor-1</div>
+                                </div>
+                                <div class="sensor-status">
+                                    <span class="status-pill status-active" id="sensor-item-status">Active</span>
+                                </div>
+                                <div class="sensor-details">
+                                    <div class="sensor-detail">
+                                        <span class="detail-label">Current Value:</span>
+                                        <span class="detail-value" id="sensor-current-value">--</span>
+                                    </div>
+                                    <div class="sensor-detail">
+                                        <span class="detail-label">Last Update:</span>
+                                        <span class="detail-value" id="sensor-last-update">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Page -->
+            <div class="page-content" id="page-history" style="display: none;">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-history card-icon"></i>
+                            Temperature History
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Temperature (°C)</th>
+                                        <th>Temperature (°F)</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody">
+                                    <tr>
+                                        <td colspan="4" style="text-align: center; color: #64748b; padding: 2rem;">
+                                            No data available yet
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div class="page-content" id="page-settings" style="display: none;">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-cog card-icon"></i>
+                            Settings
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <div class="setting-title">Default Temperature Unit</div>
+                                <div class="setting-description">Choose your preferred temperature unit</div>
+                            </div>
+                            <select class="select-input" id="defaultUnitSelect">
+                                <option value="celsius">Celsius (°C)</option>
+                                <option value="fahrenheit">Fahrenheit (°F)</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <div class="setting-title">Theme</div>
+                                <div class="setting-description">Switch between light and dark mode</div>
+                            </div>
+                            <div class="toggle-switch" id="themeToggle">
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <div class="setting-title">Data Refresh Interval</div>
+                                <div class="setting-description">How often to update data from the server</div>
+                            </div>
+                            <select class="select-input" id="refreshIntervalSelect">
+                                <option value="1000">1 second</option>
+                                <option value="2000" selected>2 seconds</option>
+                                <option value="5000">5 seconds</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Raw Data Page -->
+            <div class="page-content" id="page-raw-data" style="display: none;">
+                <div class="card full-width">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i class="fas fa-code card-icon"></i>
+                            Raw Digital Twin Data
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="raw-data" id="rawDataDisplay">Loading...</div>
+                        <div class="raw-data-actions">
+                            <button class="btn btn-primary" id="copyRawDataBtn">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                            <button class="btn btn-secondary" id="downloadRawDataBtn">
+                                <i class="fas fa-download"></i>
+                                Download JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal">
+            <div class="modal-title">Logout</div>
+            <div class="modal-message">Are you sure you want to logout?</div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelLogoutBtn">Cancel</button>
+                <button class="btn btn-primary" id="confirmLogoutBtn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome/Login Screen -->
+    <div class="welcome-container" id="welcomeScreen">
+        <div class="welcome-content">
+            <div class="welcome-logo">
+                <i class="fas fa-cube"></i>
+            </div>
+            <h1 class="welcome-title">Digital Twin Dashboard</h1>
+            <p class="welcome-description">Monitor your connected sensors in real time.</p>
+            <button class="welcome-btn" id="connectBtn">Connect</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Socket.IO connection
+        const socket = io();
+        let temperatureChart;
+        let tempHistory = [];
+        let historyRecords = []; // Store all history records for table
+        let totalUpdatesCount = 0;
+        let tempSum = 0;
+        let tempCount = 0;
+        const MAX_HISTORY = 60;
+        const MAX_HISTORY_RECORDS = 100; // Max records for history table
+        let currentUnit = 'celsius';
+
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Sidebar logo click to close on mobile
+        document.getElementById('sidebarLogo').addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+
+        // Temperature unit toggle (Celsius/Fahrenheit)
+        document.querySelectorAll('.temp-unit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.temp-unit-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentUnit = this.dataset.unit;
+                updateChart();
+            });
+        });
+
+        // Convert Celsius to Fahrenheit
+        function toFahrenheit(celsius) {
+            return (celsius * 9/5) + 32;
+        }
+
+        // Convert based on current unit
+        function convertTemp(value) {
+            if (currentUnit === 'fahrenheit') {
+                return toFahrenheit(value);
+            }
+            return value;
+        }
+
+        // Get unit label
+        function getUnitLabel() {
+            return currentUnit === 'fahrenheit' ? 'Temperature (°F)' : 'Temperature (°C)';
+        }
+
+        // Page switching
+        function showPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.style.display = 'none';
+            });
+            const targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) {
+                targetPage.style.display = 'block';
+            }
+        }
+
+        // Settings and app state
+        let refreshInterval = 2000; // Default 2 seconds
+        let isDarkMode = false;
+        let currentRawData = null;
+        let pollingInterval = null; // Will be initialized later
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const savedUnit = localStorage.getItem('defaultUnit');
+            const savedTheme = localStorage.getItem('theme');
+            const savedInterval = localStorage.getItem('refreshInterval');
+            
+            if (savedUnit) {
+                document.getElementById('defaultUnitSelect').value = savedUnit;
+                currentUnit = savedUnit;
+                // Update chart toggle buttons
+                document.querySelectorAll('.temp-unit-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.unit === savedUnit) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            if (savedTheme === 'dark') {
+                isDarkMode = true;
+                document.getElementById('themeToggle').classList.add('active');
+                document.body.classList.add('dark-mode');
+            }
+            
+            if (savedInterval) {
+                refreshInterval = parseInt(savedInterval);
+                document.getElementById('refreshIntervalSelect').value = savedInterval;
+            }
+        }
+        
+        // Apply settings to dashboard
+        function applySettings() {
+            // Apply default unit to chart if it exists
+            if (temperatureChart) {
+                updateChart();
+            }
+            
+            // Apply refresh interval to polling
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+            }
+            pollingInterval = setInterval(function() {
+                if (socket.connected) {
+                    socket.emit('request_data');
+                } else {
+                    socket.connect();
+                }
+            }, refreshInterval);
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            localStorage.setItem('defaultUnit', currentUnit);
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            localStorage.setItem('refreshInterval', refreshInterval.toString());
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                
+                // Handle logout separately
+                if (page === 'logout') {
+                    showLogoutModal();
+                    return;
+                }
+                
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                showPage(page);
+                
+                // Update raw data when navigating to raw-data page
+                if (page === 'raw-data' && currentRawData) {
+                    updateRawDataDisplay(currentRawData);
+                }
+                
+                // Close sidebar on mobile after navigation
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+            });
+        });
+
+        // Navbar settings icon click handler
+        document.querySelector('.navbar-icon[title="Settings"]').addEventListener('click', function() {
+            // Navigate to settings page
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const settingsNavItem = document.querySelector('.nav-item[data-page="settings"]');
+            if (settingsNavItem) {
+                settingsNavItem.classList.add('active');
+            }
+            showPage('settings');
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+
+        // Settings handlers
+        document.getElementById('defaultUnitSelect').addEventListener('change', function() {
+            currentUnit = this.value;
+            saveSettings();
+            // Update chart toggle buttons
+            document.querySelectorAll('.temp-unit-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.unit === currentUnit) {
+                    btn.classList.add('active');
+                }
+            });
+            updateChart();
+            // Refresh all temperature displays if we have current data
+            if (currentRawData) {
+                updateDashboard(currentRawData);
+            }
+        });
+
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            isDarkMode = !isDarkMode;
+            this.classList.toggle('active');
+            document.body.classList.toggle('dark-mode');
+            saveSettings();
+        });
+
+        document.getElementById('refreshIntervalSelect').addEventListener('change', function() {
+            refreshInterval = parseInt(this.value);
+            saveSettings();
+            applySettings();
+        });
+
+        // Raw Data handlers
+        document.getElementById('copyRawDataBtn').addEventListener('click', function() {
+            const text = document.getElementById('rawDataDisplay').textContent;
+            navigator.clipboard.writeText(text).then(function() {
+                const btn = document.getElementById('copyRawDataBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.style.background = '#10b981';
+                setTimeout(function() {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            });
+        });
+
+        document.getElementById('downloadRawDataBtn').addEventListener('click', function() {
+            if (!currentRawData) return;
+            
+            const dataStr = JSON.stringify(currentRawData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'digital-twin-data-' + new Date().toISOString().split('T')[0] + '.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+
+        function maskSensitiveData(data) {
+            const masked = JSON.parse(JSON.stringify(data));
+            if (masked.thingId && masked.thingId.length > 10) {
+                masked.thingId = masked.thingId.substring(0, 6) + '...' + masked.thingId.substring(masked.thingId.length - 4);
+            }
+            if (masked.policyId && masked.policyId.length > 10) {
+                masked.policyId = masked.policyId.substring(0, 6) + '...' + masked.policyId.substring(masked.policyId.length - 4);
+            }
+            return masked;
+        }
+
+        function updateRawDataDisplay(data) {
+            currentRawData = data;
+            const masked = maskSensitiveData(data);
+            document.getElementById('rawDataDisplay').textContent = JSON.stringify(masked, null, 2);
+        }
+
+        // Logout handlers
+        function showLogoutModal() {
+            document.getElementById('logoutModal').classList.add('show');
+        }
+
+        function hideLogoutModal() {
+            document.getElementById('logoutModal').classList.remove('show');
+        }
+
+        document.getElementById('cancelLogoutBtn').addEventListener('click', hideLogoutModal);
+        document.getElementById('confirmLogoutBtn').addEventListener('click', function() {
+            // Clear session data (but keep showWelcome flag)
+            sessionStorage.setItem('showWelcome', 'true');
+            localStorage.clear();
+            
+            // Disconnect socket
+            socket.disconnect();
+            
+            // Hide dashboard and show welcome screen
+            document.querySelector('.app-container').style.display = 'none';
+            document.getElementById('welcomeScreen').classList.add('show');
+            
+            hideLogoutModal();
+        });
+
+        // Welcome screen handler
+        document.getElementById('connectBtn').addEventListener('click', function() {
+            document.getElementById('welcomeScreen').classList.remove('show');
+            document.querySelector('.app-container').style.display = 'block';
+            socket.connect();
+            loadSettings();
+            applySettings();
+        });
+
+        // Close modal on overlay click
+        document.getElementById('logoutModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideLogoutModal();
+            }
+        });
+
+        // Socket event handlers
+        socket.on('connect', function() {
+            console.log('Connected to server');
+            updateConnectionStatus(true);
+            socket.emit('request_data');
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+            updateConnectionStatus(false);
+        });
+
+        socket.on('connect_error', function(error) {
+            console.error('Connection error:', error);
+            updateConnectionStatus(false);
+        });
+
+        socket.on('data_update', function(data) {
+            console.log('Received data update:', data);
+            updateDashboard(data);
+        });
+
+        // Polling fallback - request data based on refresh interval
+        pollingInterval = setInterval(function() {
+            if (socket.connected) {
+                socket.emit('request_data');
+            } else {
+                console.log('WebSocket disconnected, attempting to reconnect...');
+                socket.connect();
+            }
+        }, refreshInterval);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            clearInterval(pollingInterval);
+        });
+
+        function updateConnectionStatus(connected) {
+            const badge = document.getElementById('connectionBadge');
+            const text = document.getElementById('connectionText');
+            
+            if (connected) {
+                badge.className = 'connection-badge connected';
+                text.textContent = 'Connected';
+            } else {
+                badge.className = 'connection-badge disconnected';
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        function updateDashboard(data) {
+            // Update last updated time
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+            
+            if (data && !data.error) {
+                const tempFeature = data.features?.temp?.properties;
+                if (tempFeature) {
+                    const currentValue = tempFeature.value;
+                    const unit = tempFeature.unit;
+                    const timestamp = tempFeature.timestamp;
+                    const status = tempFeature.status;
+
+                    // Convert temperature based on current unit setting
+                    const displayValue = currentUnit === 'fahrenheit' ? toFahrenheit(currentValue) : currentValue;
+                    const unitSymbol = currentUnit === 'fahrenheit' ? '°F' : '°C';
+                    
+                    // Update main temperature display
+                    document.getElementById('current-temp').textContent = displayValue.toFixed(1);
+                    document.getElementById('currentTempKPI').textContent = displayValue.toFixed(1) + unitSymbol;
+                    document.getElementById('temp-unit').textContent = currentUnit;
+                    document.getElementById('temp-timestamp').textContent = new Date(timestamp).toLocaleString();
+                    
+                    const statusElement = document.getElementById('temp-status');
+                    statusElement.textContent = status;
+                    statusElement.className = 'status-pill status-' + status.toLowerCase();
+
+                    // Update statistics
+                    totalUpdatesCount++;
+                    tempSum += currentValue;
+                    tempCount++;
+                    const avgTemp = (tempSum / tempCount);
+                    const displayAvgTemp = currentUnit === 'fahrenheit' ? toFahrenheit(avgTemp) : avgTemp;
+                    
+                    document.getElementById('totalUpdates').textContent = totalUpdatesCount;
+                    document.getElementById('avgTempKPI').textContent = displayAvgTemp.toFixed(1) + unitSymbol;
+
+                    // Update chart history
+                    tempHistory.push({
+                        time: new Date(timestamp),
+                        value: currentValue
+                    });
+                    if (tempHistory.length > MAX_HISTORY) {
+                        tempHistory.shift();
+                    }
+                    updateChart();
+
+                    // Store history record for table
+                    historyRecords.unshift({
+                        timestamp: new Date(timestamp),
+                        value: currentValue,
+                        status: status
+                    });
+                    if (historyRecords.length > MAX_HISTORY_RECORDS) {
+                        historyRecords.pop();
+                    }
+                    updateHistoryTable();
+
+                    // Update sensors page
+                    updateSensorsPage(currentValue, timestamp, status);
+                }
+                
+                // Update raw data display
+                updateRawDataDisplay(data);
+            }
+        }
+
+        function updateSensorsPage(value, timestamp, status) {
+            const displayValue = currentUnit === 'fahrenheit' ? toFahrenheit(value) : value;
+            const unitSymbol = currentUnit === 'fahrenheit' ? '°F' : '°C';
+            document.getElementById('sensor-current-value').textContent = displayValue.toFixed(1) + unitSymbol;
+            document.getElementById('sensor-last-update').textContent = new Date(timestamp).toLocaleString();
+            const statusElement = document.getElementById('sensor-item-status');
+            statusElement.textContent = status;
+            statusElement.className = 'status-pill status-' + status.toLowerCase();
+        }
+
+        function updateHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (historyRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b; padding: 2rem;">No data available yet</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = historyRecords.map(record => {
+                const fahrenheit = toFahrenheit(record.value);
+                return `
+                    <tr>
+                        <td>${record.timestamp.toLocaleString()}</td>
+                        <td>${record.value.toFixed(1)}</td>
+                        <td>${fahrenheit.toFixed(1)}</td>
+                        <td><span class="status-pill status-${record.status.toLowerCase()}">${record.status}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateChart() {
+            const labels = tempHistory.map(item => item.time.toLocaleTimeString());
+            const data = tempHistory.map(item => convertTemp(item.value));
+
+            if (temperatureChart) {
+                temperatureChart.data.labels = labels;
+                temperatureChart.data.datasets[0].data = data;
+                temperatureChart.data.datasets[0].label = getUnitLabel();
+                temperatureChart.options.scales.y.title.text = getUnitLabel();
+                temperatureChart.update('none');
+            } else {
+                const ctx = document.getElementById('temperatureChart').getContext('2d');
+                temperatureChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: getUnitLabel(),
+                            data: data,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: '#e2e8f0'
+                                },
+                                ticks: {
+                                    color: '#64748b',
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: getUnitLabel(),
+                                    color: '#64748b',
+                                    font: {
+                                        size: 12,
+                                        weight: 500
+                                    }
+                                },
+                                grid: {
+                                    color: '#e2e8f0'
+                                },
+                                ticks: {
+                                    color: '#64748b',
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard initialized');
+            loadSettings();
+            applySettings();
+            
+            // Check if we should show welcome screen (if user logged out)
+            const showWelcome = sessionStorage.getItem('showWelcome');
+            if (showWelcome === 'true') {
+                document.querySelector('.app-container').style.display = 'none';
+                document.getElementById('welcomeScreen').classList.add('show');
+                sessionStorage.removeItem('showWelcome');
+            }
+        });
+    </script>
+</body>
+</html>

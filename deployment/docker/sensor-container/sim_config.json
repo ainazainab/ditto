@@ -1,0 +1,20 @@
+{
+  "thing_id": "demo:sensor-1",
+  "update_interval": 5,
+  "temp_range": {
+    "min": 20,
+    "max": 40
+  },
+  "ditto_api_url": "http://nginx:80",
+  "username": "ditto",
+  "password": "ditto",
+  "description": "Configuration for temperature sensor simulation in Docker container",
+  "notes": {
+    "thing_id": "The ID of the digital twin in Ditto",
+    "update_interval": "Seconds between temperature updates",
+    "temp_range": "Temperature range in Celsius",
+    "ditto_api_url": "Base URL for Ditto API (using nginx service name)",
+    "username": "Authentication username",
+    "password": "Authentication password"
+  }
+}
